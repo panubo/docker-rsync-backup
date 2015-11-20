@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+#
+# Rsync backup script - Backup to an rsync (over SSH) target
+#
+# This is specifically designed for rsync.net, it should work elsewhere.
+#
+# Does not maintain full / correct file permissions or extended attributes. 
+#
+
+## Config Defaults
+BACKUP_PATH=${BACKUP_PATH-'/mnt'}
+BACKUP_EXCLUDE_PATH=${BACKUP_EXCLUDE_PATH-'/dev /proc /sys /tmp /var/tmp /var/run /selinux /cgroups lost+found'}
+REMOTE=${REMOTE-'rsync.net'}
+REMOTE_PATH=${REMOTE_PATH-$(hostname -s)/}
+BACKUPS_KEEP=${BACKUPS_KEEP-'7'} # This will keep the last 7 backups
+
+## Constants
+BACKUP_TIME=`date +%Y%m%d%H%M%S`
+
+# expand excludes
+for e in $BACKUP_EXCLUDE_PATH; do
+    RSYNC_EXCLUDES="$RSYNC_EXCLUDES --exclude=${e}"
+done
+
+# Command
+function uploadBackup {
+    existing_raw="`ssh ${REMOTE} "ls ${REMOTE_PATH}"`"
+    [ "$?" -ne 0 ] && ssh ${REMOTE} "mkdir -p ${REMOTE_PATH}"
+    existing=(`echo "${existing_raw}" | egrep '[0-9]{14}' | sort -n`)
+    while [ "${#existing[@]}" -ge "${BACKUPS_KEEP}" ] && [ "${#existing[@]}" -ne "1" ]; do
+        ssh ${REMOTE} "rm -rf ${REMOTE_PATH}/${existing[0]}"
+        existing=(`ssh ${REMOTE} "ls ${REMOTE_PATH}" | egrep '[0-9]{14}' | sort -n`)
+    done
+    if [ -n "${existing}" ]; then
+        latest="${existing[$((${#existing[@]}-1))]}"
+        ssh ${REMOTE} "cp -al ${REMOTE_PATH}/${latest} ${REMOTE_PATH}/${BACKUP_TIME}"
+    fi
+    rsync -aHz --numeric-ids --chmod=u+rw --delete ${RSYNC_EXCLUDES} ${BACKUP_PATH} ${REMOTE}:${REMOTE_PATH}/${BACKUP_TIME}/
+}
+
+# upload backup
+timestart=`date +%s`
+CMD=`uploadBackup`
+CMD_RET=$?
+timetotal=$((`date +%s`-${timestart}))
+if [ "${CMD_RET}" -ne 0 ];
+then
+    echo "Backup Failed during upload. ${timetotal} sec. Msg: ${CMD}"
+    exit 1
+else
+    echo "Backup Completed OK at ${DAY}. ${timetotal} sec"
+    exit 0
+fi
