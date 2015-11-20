@@ -12,7 +12,6 @@ Specifically designed for rsync.net, it should work elsewhere.
 - `REMOTE_PATH` - Defaults to hostname
 - `BACKUPS_KEEP` - Defaults to `7`
 
-
 ## Status
 
 Testing in progress.
