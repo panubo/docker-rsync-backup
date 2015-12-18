@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -e
+
+[ "$DEBUG" == 'true' ] && set -x
+
 #
 # Rsync backup script - Backup to an rsync (over SSH) target
 #
@@ -49,6 +53,6 @@ then
     echo "Backup Failed during upload. ${timetotal} sec. Msg: ${CMD}"
     exit 1
 else
-    echo "Backup Completed OK at ${DAY}. ${timetotal} sec"
+    echo "Backup Completed OK in ${timetotal} sec"
     exit 0
 fi
