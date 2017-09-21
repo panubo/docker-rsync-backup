@@ -14,4 +14,4 @@ Specifically designed for rsync.net, it should work elsewhere.
 
 ## Status
 
-Testing in progress.
+Stable and production ready.
