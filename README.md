@@ -1,8 +1,8 @@
 # Docker Rsync Backup
 
-Minimal Alpine Linux Docker container with rsync backup capability.
+Minimal Alpine Linux Docker image with rsync backup capability.
 
-Specifically designed for rsync.net, it should work elsewhere.
+Specifically designed for rsync.net, but it is useful elsewhere.
 
 ## Environment Configuration
 
